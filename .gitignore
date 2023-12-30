@@ -1,0 +1,4 @@
+# Compiled python files
+__pycache__/
+*.egg-info
+*.zip
