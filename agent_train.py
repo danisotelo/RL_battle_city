@@ -14,7 +14,7 @@ logdir = f"logs/{test_name}" # Run "tensorboard --logdir=logs" for plotting grap
 TIMESTEPS = 10000 # Steps used by default by PPO
 
 # Path to the .zip file with pre-trained weights
-start_steps = 10000
+start_steps = 330000
 if start_steps > 0 and start_steps % TIMESTEPS == 0:
     weights_path = f"models/PPO/{test_name}/model_{start_steps}_steps.zip"
 else:

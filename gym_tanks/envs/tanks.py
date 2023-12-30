@@ -2359,36 +2359,36 @@ class TanksEnv(gym.Env):
 
 	def step(self, action):
 		self.reward = 0
-		# print(self.prev_action, action)
+		#print(self.prev_action, action)
 		for player in players:
 			if player.state == player.STATE_ALIVE and not game.game_over and game.active:
 				if action == 1: #action == 0 is doing nothing
 					player.fire()
-					self.reward -= 0.05
+					self.reward -= 0.01
 				elif action == 2:
 					player.move(game.DIR_UP)
 					if self.prev_action != 2 and self.prev_action != 0:
-						self.reward -= 0.05
+						self.reward -= 0.005
 					else:
-						self.reward += 0.05
+						self.reward += 0.005
 				elif action == 3:
 					player.move(game.DIR_RIGHT)
 					if self.prev_action != 3 and self.prev_action != 0:
-						self.reward -= 0.05
+						self.reward -= 0.005
 					else:
-						self.reward += 0.05
+						self.reward += 0.005
 				elif action == 4:
 					player.move(game.DIR_DOWN)
 					if self.prev_action != 4 and self.prev_action != 0:
-						self.reward -= 0.05
+						self.reward -= 0.005
 					else:
-						self.reward += 0.05
+						self.reward += 0.005
 				elif action == 5:
 					player.move(game.DIR_LEFT)
 					if self.prev_action != 5 and self.prev_action != 0:
-						self.reward -= 0.05
+						self.reward -= 0.005
 					else:
-						self.reward += 0.05
+						self.reward += 0.005
 				elif action == 0:
 					self.reward -= 0.2
 			self.prev_action = action
@@ -2396,22 +2396,22 @@ class TanksEnv(gym.Env):
 
 		for enemy in enemies:
 			if enemy.state == enemy.STATE_DEAD and not game.game_over and game.active:
-				self.reward += 50 # RW KILL
+				self.reward += 100 # RW KILL
 				#print(len(enemies))
 				#print("+50 for killing a tank!", self.reward)
 				enemies.remove(enemy)
 				#print(len(enemies))
-				self.reward += 10 * ((6 / (len(enemies) + 1)) - 1) # RW TANKS LEFT
+				self.reward += 20 * ((6 / (len(enemies) + 1)) - 1) # RW TANKS LEFT
 				#print(f"+{10 * ((6 / (len(enemies) + 1)) - 1)} for the remaining tanks left!", self.reward)
 				if len(game.level.enemies_left) == 0 and len(enemies) == 0:
-					self.reward += 100 # RW WIN
+					self.reward += 200 # RW WIN
 					#print("+100 for winning the game!", self.reward)
 					level_time = time.time() - self.level_start_time
 					if level_time >= 150:
-						self.reward -= 50 # RW TIME ELLAPSES
+						self.reward -= 100 # RW TIME ELLAPSES
 						#print("-20 for exceeding the maximum time!", self.reward)
 					else:
-						self.reward += 50 / (level_time + 1) # RW TIME EFFICIENCY
+						self.reward += 100 / (level_time + 1) # RW TIME EFFICIENCY
 					print("YOU KILLED ALL ENEMY TANKS! :)")
 					game.finishLevel()
 			else:
@@ -2424,7 +2424,7 @@ class TanksEnv(gym.Env):
 						game.triggerBonus(player.bonus, player)
 						player.bonus = None
 				elif player.state == player.STATE_DEAD:
-					self.reward -= 80 # RW DEAD
+					self.reward -= 200 # RW DEAD
 					#print("-50 for dying! ", self.reward)
 					game.superpowers = 0
 					player.lives -= 1
@@ -2453,7 +2453,7 @@ class TanksEnv(gym.Env):
 				game.gameOver()
 
 		gtimer.update(500)
-		#self.reward -= 0.01 # RW TIMESTEP
+		self.reward -= 0.001 # RW TIMESTEP
 
 		game.draw() #VLADYS RENDER
 		screen_array = pygame.surfarray.array3d(screen)
