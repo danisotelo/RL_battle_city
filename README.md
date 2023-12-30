@@ -18,11 +18,11 @@ Now you must open a VS Code terminal and install the required dependencies:
 pip install gymnasium
 pip install stable-baselines3[extra]
 ```
-Next, you need to go to the path of the file `setup.py` and try to run:
+Next, you need to install the `gym_tanks` custom package. In order to do this you should select the folder where you have cloned the repository and try running:
 ```
 pip install .
 ```
-If errors arrise, then you need to install Visual Studio Community 2022. Once you installed it, access to the Visual Studio Installer, go to `Modify` and install the following workloads:
+If errors arrise, then you need to install Visual Studio Community 2022 because some C++ specific files are required. Once you install it, access to the Visual Studio Installer, go to `Modify` and install the following workloads:
 - Desktop development with C++
 - Universal Windows Platform development
 - Python development
@@ -36,6 +36,6 @@ Additionally, you should also install the following individual components:
 - MSVC v142 Build tools - VS 2019 C++ x64/x86  (v14.29-16.11)
 - MSVC Libraries with Spectre Mitigations - VS 2019 C++ for x64/x86 (v14.29-16.11)
 
-Try again running `pip install .`.
+Try again running `pip install .`, now it should run without errors and the installation is finished!.
 
 ## Running the Program
