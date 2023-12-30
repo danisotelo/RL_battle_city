@@ -2330,6 +2330,7 @@ class TanksEnv(gym.Env):
 		# Reset the timer at the start of a level
 		self.level_start_time = time.time()
 		self.reward = 0
+		self.prev_action = 0
 		observation = self._get_obs()
 		info = self._get_info()
   
@@ -2362,14 +2363,29 @@ class TanksEnv(gym.Env):
 			if player.state == player.STATE_ALIVE and not game.game_over and game.active:
 				if action == 1: #action == 0 is doing nothing
 					player.fire()
+					self.prev_action = 1
 				elif action == 2:
 					player.move(game.DIR_UP)
+					if self.prev_action != 2:
+						self.reward -= 0.05
+					self.prev_action = 2
 				elif action == 3:
 					player.move(game.DIR_RIGHT)
+					if self.prev_action != 3:
+						self.reward -= 0.05
+					self.prev_action = 3
 				elif action == 4:
 					player.move(game.DIR_DOWN)
+					if self.prev_action != 4:
+						self.reward -= 0.05
+					self.prev_action = 4
 				elif action == 5:
 					player.move(game.DIR_LEFT)
+					if self.prev_action != 5:
+						self.reward -= 0.05
+					self.prev_action = 5
+				elif action == 0:
+					self.reward -= 0.1
 			player.update()
 
 		for enemy in enemies:
@@ -2386,10 +2402,10 @@ class TanksEnv(gym.Env):
 					#print("+100 for winning the game!", self.reward)
 					level_time = time.time() - self.level_start_time
 					if level_time >= 150:
-						self.reward -= 20 # RW TIME ELLAPSES
+						self.reward -= 50 # RW TIME ELLAPSES
 						#print("-20 for exceeding the maximum time!", self.reward)
 					else:
-						self.reward += 20 / (level_time + 1) # RW TIME EFFICIENCY
+						self.reward += 50 / (level_time + 1) # RW TIME EFFICIENCY
 					print("YOU KILLED ALL ENEMY TANKS! :)")
 					game.finishLevel()
 			else:
@@ -2402,7 +2418,7 @@ class TanksEnv(gym.Env):
 						game.triggerBonus(player.bonus, player)
 						player.bonus = None
 				elif player.state == player.STATE_DEAD:
-					self.reward -= 50 # RW DEAD
+					self.reward -= 80 # RW DEAD
 					#print("-50 for dying! ", self.reward)
 					game.superpowers = 0
 					player.lives -= 1

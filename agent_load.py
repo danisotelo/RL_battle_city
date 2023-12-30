@@ -11,7 +11,7 @@ TIMESTEPS = 10000
 
 # Set the models folder and path
 models_dir = "models/PPO/Test_Kill"
-model_path = f"{models_dir}/model_320000_steps.zip" # Put here the weights file you want to read
+model_path = f"{models_dir}/model_650000_steps.zip" # Put here the weights file you want to read
 
 # Load the model
 model = PPO.load(model_path, env = env, n_steps = TIMESTEPS)
