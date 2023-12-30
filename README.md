@@ -18,7 +18,7 @@ Now you must open a VS Code terminal and install the required dependencies:
 pip install gymnasium
 pip install stable-baselines3[extra]
 ```
-Next, you need to install the `gym_tanks` custom package. In order to do this you should select the folder where you have cloned the repository and try running:
+Next, you need to install the `gym_tanks` custom package. In order to do this you should select the folder where you have cloned the repository and try running from the terminal:
 ```
 pip install .
 ```
