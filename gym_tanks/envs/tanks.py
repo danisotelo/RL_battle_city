@@ -2359,33 +2359,39 @@ class TanksEnv(gym.Env):
 
 	def step(self, action):
 		self.reward = 0
+		# print(self.prev_action, action)
 		for player in players:
 			if player.state == player.STATE_ALIVE and not game.game_over and game.active:
 				if action == 1: #action == 0 is doing nothing
 					player.fire()
-					self.prev_action = 1
+					self.reward -= 0.05
 				elif action == 2:
 					player.move(game.DIR_UP)
-					if self.prev_action != 2:
+					if self.prev_action != 2 and self.prev_action != 0:
 						self.reward -= 0.05
-					self.prev_action = 2
+					else:
+						self.reward += 0.05
 				elif action == 3:
 					player.move(game.DIR_RIGHT)
-					if self.prev_action != 3:
+					if self.prev_action != 3 and self.prev_action != 0:
 						self.reward -= 0.05
-					self.prev_action = 3
+					else:
+						self.reward += 0.05
 				elif action == 4:
 					player.move(game.DIR_DOWN)
-					if self.prev_action != 4:
+					if self.prev_action != 4 and self.prev_action != 0:
 						self.reward -= 0.05
-					self.prev_action = 4
+					else:
+						self.reward += 0.05
 				elif action == 5:
 					player.move(game.DIR_LEFT)
-					if self.prev_action != 5:
+					if self.prev_action != 5 and self.prev_action != 0:
 						self.reward -= 0.05
-					self.prev_action = 5
+					else:
+						self.reward += 0.05
 				elif action == 0:
-					self.reward -= 0.1
+					self.reward -= 0.2
+			self.prev_action = action
 			player.update()
 
 		for enemy in enemies:

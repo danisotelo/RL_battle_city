@@ -14,7 +14,7 @@ logdir = f"logs/{test_name}" # Run "tensorboard --logdir=logs" for plotting grap
 TIMESTEPS = 10000 # Steps used by default by PPO
 
 # Path to the .zip file with pre-trained weights
-start_steps = 680000
+start_steps = 10000
 if start_steps > 0 and start_steps % TIMESTEPS == 0:
     weights_path = f"models/PPO/{test_name}/model_{start_steps}_steps.zip"
 else:
@@ -38,7 +38,7 @@ else:
 
 # Training parameters
 SAVE_INTERVAL = 10000 # Number of iterations to save
-TOTAL_TRAINING_TIMESTEPS = 10000000 # Total number of iterations for training
+TOTAL_TRAINING_TIMESTEPS = 1000000 # Total number of iterations for training
 
 total_timesteps = start_steps
 last_save = start_steps # Keep track of the last save point
