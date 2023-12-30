@@ -39,3 +39,15 @@ Additionally, you should also install the following individual components:
 Try again running `pip install .`, now it should run without errors and the installation is finished!.
 
 ## Running the Program
+You can modify the agent rewards in the file `gym_tanks/envs/tanks.py`. Then, in order to train the agent go to `agent_train.py` and select the test you want to run changing `test_name`. In case you want to start training from a certain weights file, specify the number of initial steps of the model you want to load in `start_steps`. To start the training run:
+```
+python agent_train.py
+```
+In order to visualize the training results open a new terminal and run:
+```
+tensorboard --logdir=logs
+```
+In case you don't want to train the agent but just to load a model and see its performance, go to `agent_load.py` file and select the model you want to load in `models_dir`. Then, run:
+```
+python agent_load.py
+```
