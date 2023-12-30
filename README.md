@@ -11,38 +11,31 @@ To clone the repository and start using the **RL Tank Battalion**, follow these 
 git clone https://github.com/danisotelo/RL_tank_battalion.git
 ```
 ### Installing Dependencies
-Before running the program, you need to install Anaconda (https://www.anaconda.com/download). Once you have installed it, open Anaconda Navigator and go to ```Environments > Create```. You need to create a new environment (call it **tanks** for example), and then, select the Python package 3.10.13 (this is important because it might not work for more recent Python versions). Once you have activated the environment, go to ```Home > VS Code```.
+Before running the program, you need to install Anaconda (https://www.anaconda.com/download). Once you have installed it, open Anaconda Navigator and go to `Environments > Create`. You need to create a new environment (call it **tanks** for example), and then, select the Python package 3.10.13 (this is important because it might not work for more recent Python versions). Once you have activated the environment, go to `Home > VS Code`.
 
 Now you must open a VS Code terminal and install the required dependencies:
 ```
 pip install gymnasium
 pip install stable-baselines3[extra]
 ```
-Next, you need to go to the path of the file `setup.py`
+Next, you need to go to the path of the file `setup.py` and try to run:
+```
+pip install .
+```
+If errors arrise, then you need to install Visual Studio Community 2022. Once you installed it, access to the Visual Studio Installer, go to `Modify` and install the following workloads:
+- Desktop development with C++
+- Universal Windows Platform development
+- Python development
+- Linux Development with C++
+- Visual Studio extension development
+- Game Development with C++
 
-Copiar mi carpeta de gym-tanks.
-En el setup cambiar: gymnasium==0.29.1
-
-
-Ejecutar "pip install ."
-
-
-
-Problemas? --> necesitas Visual Studio, con cargas de trabajo:
-- Desarrollo para el escritorio con C++
-- Desarrollo de la plataforma universal de Windows
-- Desarrollo de Python
-- Linux y desarrollo integrado con C++
-también tengo preo creo que no hace falta:
-- Desarrollo de extensiones de Visual Studio y
-- Desarrollo de juegos con C++
-
-Componentes individuales:
+Additionally, you should also install the following individual components:
 - C++ Build Insights
-- Windows 10 SDK
-- Herramientas de compilación de MSVC v142 -VS 2019 C++ para x64/x86 (v14.29-16.11)
-- Bibliotecas con mitigaciones de Spectre de MSVC ... igual q antes
+- Windows 10/11 SDK
+- MSVC v142 Build tools - VS 2019 C++ x64/x86  (v14.29-16.11)
+- MSVC Libraries with Spectre Mitigations - VS 2019 C++ for x64/x86 (v14.29-16.11)
 
+Try again running `pip install .`.
 
-
-Ahora sí, Ejecutar "pip install ."
+## Running the Program
