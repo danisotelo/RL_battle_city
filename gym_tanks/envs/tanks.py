@@ -118,7 +118,7 @@ class ai_agent():
         if p_mapinfo.empty() != True:
             try:
                 self.mapinfo = p_mapinfo.get(False)
-            except queue.Empty:
+            except queue.empty:
                 skip_this = True
 
     def Update_Strategy(self, c_control, shoot, move_dir):
@@ -3012,7 +3012,7 @@ class TanksEnv(gym.Env):
 			try:
 				queue.get(False)
 				print("Clear queue!")
-			except queue.Empty:
+			except queue.empty:
 				print("Queue is already empty!")
     
 	def reset(self, seed=None, options=None):
@@ -3067,7 +3067,7 @@ class TanksEnv(gym.Env):
 		if game.c_control.empty() != True:
 			try:
 				game.ai_bot_actions = game.c_control.get(False)
-			except queue.Empty:
+			except queue.empty:
 				skip_this = True
 
 		for i in range(3):
@@ -3112,7 +3112,7 @@ class TanksEnv(gym.Env):
 					self.reward += 0.1
 				else:
 					self.reward -= 0.1
-					
+     
 				player.update(time_passed)
 
 			for enemy in enemies:
@@ -3246,7 +3246,7 @@ class TanksEnv(gym.Env):
 		truncated = False
 		info = self._get_info()
 		#print("step: ", self.paso,"  ","danger flag: ", danger_flag,"  ", "stupid flag: ", stupid_flag,"  ", "reward: ", reward) #DEBUGGING
-		#print("RL Agent: ", action, ". AI Training Bot: ", game.ai_bot_actions, ". Reward: ", reward)
+		print("RL Agent: ", action, ". AI Training Bot: ", game.ai_bot_actions, ". Reward: ", reward)
 		return observation, reward, terminated, truncated, info		
 
 		# # Map the action (element of {0,1,2,3}) to the direction we walk in
