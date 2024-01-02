@@ -2,35 +2,40 @@
 import gym_tanks
 import gymnasium as gym
 from stable_baselines3 import PPO
+from multiprocessing import freeze_support
 
-# Load and reset the environment
-env = gym.make('gym_tanks/tanks-v0')
-env.reset()
+if __name__ == "__main__":
+    # Avoid multiprocessing issues
+    freeze_support()
 
-TIMESTEPS = 10000
+    # Load and reset the environment
+    env = gym.make('gym_tanks/tanks-v0')
+    env.reset()
 
-# Set the models folder and path
-models_dir = "models/PPO/Test_Kill"
-model_path = f"{models_dir}/model_330000_steps.zip" # Put here the weights file you want to read
+    TIMESTEPS = 10000
 
-# Load the model
-model = PPO.load(model_path, env = env, n_steps = TIMESTEPS)
+    # Set the models folder and path
+    models_dir = "models/PPO/Test_Bot"
+    model_path = f"{models_dir}/model_30720_steps.zip" # Put here the weights file you want to read
 
-# Vectorize the environment
-env = model.get_env()
+    # Load the model
+    model = PPO.load(model_path, env = env, n_steps = TIMESTEPS)
 
-episodes = 10
+    # Vectorize the environment
+    env = model.get_env()
 
-for ep in range(episodes):
-    obs = env.reset()
-    done = False
-    while not done:
-        # Render the environment
-        env.render()
-        # Predict the action
-        action, _state = model.predict(obs)
-        # Step the environment
-        obs, reward, done, info = env.step(action)
-        print(reward)
+    episodes = 10
 
-env.close()
+    for ep in range(episodes):
+        obs = env.reset()
+        done = False
+        while not done:
+            # Render the environment
+            env.render()
+            # Predict the action
+            action, _state = model.predict(obs)
+            # Step the environment
+            obs, reward, done, info = env.step(action)
+            print(reward)
+
+    env.close()
