@@ -38,6 +38,21 @@ Additionally, you should also install the following individual components:
 
 Try again running `pip install .`, now it should run without errors and the installation is finished!.
 
+### Optional CUDA Installation for GPU Use
+If you want to train the agent using your GPU instead of your CPU, first run `nvidia-smi` in your terminal to check the CUDA version of your GPU (the following steps are suitable if your CUDA Version >= 11.8, if not, you should look for a different CUDA Toolkit and PyTorch version). Download CUDA Toolkit 11.8 from https://developer.nvidia.com/cuda-11-8-0-download-archive. Follow the installation steps and then when running `nvcc --version` in the terminal you should be able to see the installed CUDA version. Then, install PyTorch with CUDA by running:
+```
+conda install pytorch==2.1.1 torchvision==0.16.1 torchaudio==2.1.1 pytorch-cuda=11.8 -c pytorch -c nvidia
+```
+Once you do this, the installation should be complete! In order to verify if everything has been installed successfuly run the following Python script in your **tanks** Conda environment.
+```
+import torch
+import stable_baselines3
+print(torch.__version__) # 2.1.1
+print(torch.version.cuda) # 11.8
+print(torch.cuda.is_available()) # True
+print(stable_baselines3.common.utils.get_device()) # device(type='cuda')
+```
+
 ## Running the Program
 You can modify the agent rewards in the file `gym_tanks/envs/tanks.py`. Then, in order to train the agent go to `agent_train.py` and select the test you want to run changing `test_name`. In case you want to start training from a certain weights file, specify the number of initial steps of the model you want to load in `start_steps`. To start the training run:
 ```
