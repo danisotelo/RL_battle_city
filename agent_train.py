@@ -19,7 +19,7 @@ if __name__ == "__main__":
     TIMESTEPS = 2048 # Steps used by default by PPO
 
     # Path to the .zip file with pre-trained weights
-    start_steps = 90112
+    start_steps = 161792
     if start_steps > 0 and start_steps % TIMESTEPS == 0:
         weights_path = f"models/PPO/{test_name}/model_{start_steps}_steps.zip"
     else:

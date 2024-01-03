@@ -1846,8 +1846,10 @@ class Player(Tank):
 		#if no collision, move player
 		self.rect.topleft = (new_position[0], new_position[1])
 
-	def reset(self):
+	def reset(self, pos):
 		""" reset player """
+		self.start_position = pos
+		self.start_direction = random.randint(0, 3)
 		self.rotate(self.start_direction, False)
 		self.rect.topleft = self.start_position
 		self.superpowers = 0
@@ -1959,6 +1961,7 @@ class Game():
 
 		# number of players. here is defined preselected menu value
 		self.nr_of_players = 1
+		self.available_positions = []
 
 		del players[:]
 		del bullets[:]
@@ -2035,7 +2038,13 @@ class Game():
 
 	def respawnPlayer(self, player, clear_scores = False):
 		""" Respawn player """
-		player.reset()
+		n = random.randint(0, len(self.available_positions) - 1)
+		[kx, ky] = self.available_positions[n]
+		x = kx * self.TILE_SIZE + (self.TILE_SIZE * 2 - 26) / 2
+		y = ky * self.TILE_SIZE + (self.TILE_SIZE * 2 - 26) / 2
+		pos = [x, y]
+
+		player.reset(pos)
 
 		if clear_scores:
 			player.trophies = {
@@ -2144,17 +2153,10 @@ class Game():
 		"""
 
 		global players
-  
-		# Create a list of valid x spawns if y > 21
-		valid_x_spawns = list(range(0, 10)) + list(range(15, 25))
 
 		if len(players) == 0:
-			# first player
-			x = 8 * self.TILE_SIZE + (self.TILE_SIZE * 2 - 26) / 2
-			y = 24 * self.TILE_SIZE + (self.TILE_SIZE * 2 - 26) / 2
-
 			player = Player(
-				self.level, 0, [x, y], self.DIR_UP, (0, 0, 13*2, 13*2)
+				self.level, 0, [0, 0], self.DIR_UP, (0, 0, 13*2, 13*2)
 			)
 			players.append(player)
 			# # Initialize first player randomly each level
@@ -2642,6 +2644,18 @@ class Game():
 			sounds["start"].play()
 			gtimer.add(4330, lambda :sounds["bg"].play(-1), 1)
 
+		# Code for random initialization
+		filename = "levels/gameplay/" + str(self.stage)
+		f = open(filename, "r")
+		data = f.read().split("\n")
+		f.close()
+		for y in range(len(data) - 1):
+			row = data[y]
+			for x in range(len(row) - 1):
+				if row[x] == "." and row[x + 1] == "." and data[y + 1][x] == "." and data[y+1][x+1] == ".":
+					self.available_positions.append([x, y])
+		random.shuffle(self.available_positions)
+  
 		self.reloadPlayers()
 
 		gtimer.add(5000, lambda :self.spawnEnemy())
@@ -3067,6 +3081,7 @@ class TanksEnv(gym.Env):
 		if game.c_control.empty() != True:
 			try:
 				game.ai_bot_actions = game.c_control.get(False)
+				game.ai_bot_actions = [0 if x is None else x for x in game.ai_bot_actions] # Prevent some None type movements
 			except queue.empty:
 				skip_this = True
 
@@ -3081,7 +3096,7 @@ class TanksEnv(gym.Env):
 					if action[0] == 1:
 						player.fire()
 						#self.reward -= 0.01
-					elif action[1] == 0:
+					if action[1] == 0:
 						player.move(game.DIR_UP)
 						# if self.prev_action != 2 and self.prev_action != 0:
 						# 	self.reward -= 0.005
@@ -3108,11 +3123,13 @@ class TanksEnv(gym.Env):
 				# 	elif action[1] == 4:
 				# 		self.reward -= 0.2
 				# self.prev_action = action
-				if action[0] == game.ai_bot_actions[0] and action[1] == game.ai_bot_actions[1]:
-					self.reward += 0.1
-				else:
-					self.reward -= 0.1
-     
+				if action[1] == game.ai_bot_actions[1]:
+					if action[1] == 4:
+						pass
+					else:
+						self.reward += 0.02
+				#if action[0] == 1:
+					#self.reward += 0.005
 				player.update(time_passed)
 
 			for enemy in enemies:
@@ -3146,10 +3163,10 @@ class TanksEnv(gym.Env):
 					if player.state == player.STATE_ALIVE:
 						if player.bonus != None and player.side == player.SIDE_PLAYER:
 							game.triggerBonus(player.bonus, player)
-							self.reward += 1 # RW BONUS
+							#self.reward += 1 # RW BONUS
 							player.bonus = None
 					elif player.state == player.STATE_DEAD:
-						self.reward -= 5 # RW DEAD
+						self.reward -= 1 # RW DEAD
 						#print("-50 for dying! ", self.reward)
 						game.superpowers = 0
 						player.lives -= 1
@@ -3219,7 +3236,7 @@ class TanksEnv(gym.Env):
 
 			if not game.game_over:
 				if not castle.active:
-					self.reward -= 15 # RW LOST
+					self.reward -= 3 # RW LOST
 					print("Castle not active! Reward: ", self.reward)
 					self.kill_ai_process(game.p)
 					self.clear_queue(game.p_mapinfo)

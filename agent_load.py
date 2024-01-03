@@ -16,7 +16,7 @@ if __name__ == "__main__":
 
     # Set the models folder and path
     models_dir = "models/PPO/Test_Bot"
-    model_path = f"{models_dir}/model_30720_steps.zip" # Put here the weights file you want to read
+    model_path = f"{models_dir}/model_161792_steps.zip" # Put here the weights file you want to read
 
     # Load the model
     model = PPO.load(model_path, env = env, n_steps = TIMESTEPS)
@@ -33,7 +33,7 @@ if __name__ == "__main__":
             # Render the environment
             env.render()
             # Predict the action
-            action, _state = model.predict(obs)
+            action, _state = model.predict(obs, deterministic = False)
             # Step the environment
             obs, reward, done, info = env.step(action)
             print(reward)
