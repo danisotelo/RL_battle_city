@@ -1,0 +1,80 @@
+Purpose: 
+    learn the game.
+
+Method: 
+    simplify maximally the game, 
+    randomize the environment, 
+    give maximum information to the agent and 
+    hope for the best.
+
+Strategy: 
+    initiate 10 models up to 200.000 steps 
+    select the one with the highest reward and train up to 2.000.000 steps.
+
+Details:
+    map is random, 
+    initial player position is random, 
+    enemy spawn position is as per original game, 
+    enemy spawn time is reduced to TODO,
+    enemy numbers are between 6 and 20 per level,
+    player has 3 lives per level.
+
+REWARDS:
+    self.reward += 0.05 for following previous action and not colliding
+    self.reward += 0.1 for matching hardcoded bot move action (excluding no move action)
+    self.reward += 0.2 for matching hardcoded bot shoot action (excluding no shoot action)
+    self.reward += 1 for bonus triggered
+    self.reward += 2 for tank killed
+    self.reward += 10 for win level
+
+PENALTIES:
+    self.reward -= self.heat_base_penalty * (1.22 ** self.heat_map[self.grid_position])
+        for staying on the same place too long or visiting the same tiles
+        tops at -1.5 
+    self.reward -= 0.1 for any player bullet aiming to the castle
+    self.reward -= 4 for player dying
+    self.reward -= 6 for player losing all lives
+    self.reward -= 10 for losing castle
+
+
+PARAMETERS
+Best practices for selecting the hyperparameters: https://github.com/gzrjzcx/ML-agents/blob/master/docs/Training-PPO.md
+In general default parameters seem to be adjuted to atari games with quick rewards. It makes sense to change them for a more strategic game.
+Importance of each one: https://arxiv.org/pdf/2306.01324.pdf
+
+
+    max_episode_steps = 8192
+    TIMESTEPS = 16384 (Buffer Size)
+
+
+    learning_rate = 1e-5,
+    n_steps = 4096,
+    batch_size = 1024,
+    gamma = 0.995,
+        we want to chase closes enemy --> lower gamma. But we want to protect the base!!
+        0.995^100 = 60% of future reward considered after 100 steps
+    gae_lambda = 0.85,
+    ent_coef = 0.001,
+        justification: https://www.youtube.com/watch?v=1ppslywmIPs&t=1s&ab_channel=RLHugh
+        caution for high value: https://www.reddit.com/r/reinforcementlearning/comments/i3i5qa/ppo_to_high_entropy_coefficient_makes_agent/
+        more in depth look: https://arxiv.org/pdf/1811.11214.pdf
+    rest default
+
+OBSERVATION SPACE
+    "obs_frames": self.obs_frames,
+        includes the current(first), previous(second) and forth frame
+    "ai_bot_actions": np.array(game.ai_bot_actions),
+    "prev_action": self.prev_action,
+    "flags": np.array([obs_flag_castle_danger, obs_flag_enemy_in_line, obs_flag_bullet_avoidance_triggered, obs_flag_stupid, obs_flag_player_collision, obs_flag_hot]),
+    "enemy_distance_to_castle": obs_distance_closest_enemy_to_castle,
+    "enemy_distance_to_player": obs_distance_closest_enemy_to_player,
+    "enemies_left": len(enemies),
+    "temperature": self.heat_map[self.grid_position],
+    "player_position": np.array(self.grid_position),
+    "player_lives": players[0].lives,
+
+NOTE TO NOT GET MAD
+    "The general trend in reward should consistently increase over time. 
+    Small ups and downs are to be expected. 
+    Depending on the complexity of the task, 
+    a significant increase in reward may not present itself until millions of steps into the training process."
