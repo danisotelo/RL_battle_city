@@ -10,17 +10,17 @@ if __name__ == "__main__":
     freeze_support()
     
     # Define the test name for this particular run
-    test_name = "Test_Bot"
+    test_name = "SeriousTry1"
 
     # Set the models and log folders
     models_dir = f"models/PPO/{test_name}"
     logdir = f"logs/{test_name}" # Run "tensorboard --logdir=logs" for plotting graphs
 
-    TIMESTEPS = 2048 # Steps used by default by PPO
+    TIMESTEPS = 16384 # Steps used by default by PPO
 
     # Path to the .zip file with pre-trained weights
-    start_steps = 161792
-    if start_steps > 0 and start_steps % TIMESTEPS == 0:
+    start_steps = 0
+    if start_steps > 0:
         weights_path = f"models/PPO/{test_name}/model_{start_steps}_steps.zip"
     else:
         # Train from zero
@@ -30,20 +30,19 @@ if __name__ == "__main__":
     os.makedirs(models_dir, exist_ok = True)
     os.makedirs(logdir, exist_ok = True)
 
-    # Load and reset the environment
+    # Load the environment
     env = gym.make('gym_tanks/tanks-v0')
-    env.reset()
 
     # Check if the weights file exists
     if weights_path is not None:
-        model = PPO.load(weights_path, env = env, tensorboard_log = logdir, n_steps = TIMESTEPS, device = "cuda")
+        model = PPO.load(weights_path, env = env, verbose = 1, tensorboard_log = logdir, device = "cuda", learning_rate = 1e-5, n_steps = 4096, batch_size = 1024, gamma = 0.995, gae_lambda = 0.85, ent_coef = 0.001) 
     else:
         # Create the model with PPO algorithm
-        model = PPO("MultiInputPolicy", env, verbose = 1, tensorboard_log = logdir, n_steps = TIMESTEPS, device = "cuda")
+        model = PPO("MultiInputPolicy", env, verbose = 1, tensorboard_log = logdir, device = "cuda", learning_rate = 1e-5, n_steps = 4096, batch_size = 1024, gamma = 0.995, gae_lambda = 0.85, ent_coef = 0.001)
 
     # Training parameters
-    SAVE_INTERVAL = 10000 # Number of iterations to save
-    TOTAL_TRAINING_TIMESTEPS = 10000000 # Total number of iterations for training
+    SAVE_INTERVAL = 32768 # Number of iterations to save
+    TOTAL_TRAINING_TIMESTEPS = 200000 # Total number of iterations for training
 
     total_timesteps = start_steps
     last_save = start_steps # Keep track of the last save point
