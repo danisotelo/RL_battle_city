@@ -15,7 +15,7 @@ Details:
     map is random, 
     initial player position is random, 
     enemy spawn position is as per original game, 
-    enemy spawn time is reduced to TODO,
+    enemy spawn time is reduced to half,
     enemy numbers are between 6 and 20 per level,
     player has 3 lives per level.
 
