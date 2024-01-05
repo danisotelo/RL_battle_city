@@ -2707,7 +2707,7 @@ class Game():
 
 		self.reloadPlayers()
 
-		gtimer.add(500, lambda :self.spawnEnemy()) #CHECK
+		gtimer.add(2500, lambda :self.spawnEnemy()) #CHECK
 
 		# if True, start "game over" animation
 		self.game_over = False #VLADYS DONE FLAG
@@ -3278,7 +3278,7 @@ class TanksEnv(gym.Env):
 
 			# Decay the heat map
 			self.heat_map *= (1 - self.heat_decay_rate)
-			print(np.round(self.heat_map, 1))
+			#print(np.round(self.heat_map, 1))
 
 			player.update(time_passed)
 
@@ -3450,7 +3450,7 @@ class TanksEnv(gym.Env):
 		# 	truncated = True
 		info = self._get_info()
 		#print("step: ", self.paso,"  ","danger flag: ", danger_flag,"  ", "stupid flag: ", obs_flag_stupid,"  ", "reward: ", reward) #DEBUGGING
-		print("step: ", self.paso,". RL Agent: ", action, ". AI Training Bot: ", game.ai_bot_actions, ". Reward: ", reward)
+		#print("step: ", self.paso,". RL Agent: ", action, ". AI Training Bot: ", game.ai_bot_actions, ". Reward: ", reward)
 		return observation, reward, terminated, truncated, info		
 
 		# # Map the action (element of {0,1,2,3}) to the direction we walk in
