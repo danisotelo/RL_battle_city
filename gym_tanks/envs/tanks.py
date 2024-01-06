@@ -3120,17 +3120,17 @@ class TanksEnv(gym.Env):
 		
 		################### OBSERVATION DEBUGGING #####################
 			
-		print("step: ", self.paso, ". Reward: ", self.reward)
-		print(np.array(self.grid_position))
-		print(np.array(self.enemy_positions[0]))
-		print(np.array(self.enemy_positions[1]))
-		print(np.array(self.enemy_positions[2]))
-		print(np.array(self.enemy_positions[3]))
-		print(np.array(game.ai_bot_actions))
-		print(self.prev_action)
-		print(np.array([obs_flag_castle_danger, obs_flag_stupid, obs_flag_player_collision, obs_flag_hot]))
-		print(len(enemies))
-		print(int(self.heat_map[self.grid_position[0], self.grid_position[1]]))
+		# print("step: ", self.paso, ". Reward: ", self.reward)
+		# print(np.array(self.grid_position))
+		# print(np.array(self.enemy_positions[0]))
+		# print(np.array(self.enemy_positions[1]))
+		# print(np.array(self.enemy_positions[2]))
+		# print(np.array(self.enemy_positions[3]))
+		# print(np.array(game.ai_bot_actions))
+		# print(self.prev_action)
+		# print(np.array([obs_flag_castle_danger, obs_flag_stupid, obs_flag_player_collision, obs_flag_hot]))
+		# print(len(enemies))
+		# print(int(self.heat_map[self.grid_position[0], self.grid_position[1]]))
 
 		if obs_flag_castle_danger or self.grid_position[6] != 4 or self.enemy_positions[0][6] != 4 or self.enemy_positions[1][6] != 4:
 			dummy = 0
@@ -3181,6 +3181,7 @@ class TanksEnv(gym.Env):
 		#self.level_start_time = time.time()
 		self.reward = 0
 		self.paso = 0
+		players[0].lives = 3
 		self.prev_action = np.array([0, 4])
 		#self.killed_enemies = 0
 
@@ -3212,7 +3213,7 @@ class TanksEnv(gym.Env):
 		game.ai_bot_actions = [0 if x is None else x for x in game.ai_bot_actions]
 		observation = self._get_obs()
 		info = self._get_info()
-  
+
 		return observation, info
 
 		# # We need the following line to seed self.np_random
@@ -3410,6 +3411,7 @@ class TanksEnv(gym.Env):
 					if player.lives > 0:
 						game.respawnPlayer(player)
 					else:
+						player.lives = 0
 						self.reward -= 6
 						print("You died! :(. Reward: ", self.reward)
 						self.kill_ai_process(game.p)
