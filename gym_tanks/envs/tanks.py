@@ -11,8 +11,7 @@ import heapq
 import math
 
 # Import gym required libraries
-import gymnasium as gym
-from gymnasium import spaces
+import gymnasium
 
 from skimage.transform import rescale
 from collections import deque
@@ -1043,7 +1042,7 @@ class Explosion():
 		self.active = True
 
 		if interval == None:
-			interval = 100
+			interval = 1
 
 		if images == None:
 			images = [
@@ -1277,7 +1276,7 @@ class Tank():
 		self.shielded = False
 
 		# px per move
-		self.speed = 2
+		self.speed = 5*2
 
 		# how many bullets can tank fire simultaneously
 		self.max_active_bullets = 1
@@ -1389,6 +1388,7 @@ class Tank():
 				self.spawnBonus()
 
 	def fire(self, forced = False):
+		global obs_flag_bullet_fired
 		""" Shoot a bullet
 		@param boolean forced. If false, check whether tank has exceeded his bullet quota. Default: True
 		@return boolean True if bullet was fired, false otherwise
@@ -1415,7 +1415,7 @@ class Tank():
 
 		# if superpower level is at least 1
 		if self.superpowers > 0:
-			bullet.speed = 8
+			bullet.speed = 5*8
 
 		# if superpower level is at least 3
 		if self.superpowers > 2:
@@ -1540,11 +1540,11 @@ class Enemy(Tank):
 			return
 
 		if self.type == self.TYPE_BASIC:
-			self.speed = 1
+			self.speed = 5*1
 		elif self.type == self.TYPE_FAST:
-			self.speed = 3
+			self.speed = 5*3
 		elif self.type == self.TYPE_POWER:
-			self.superpowers = 1
+			self.superpowers = 5*1
 		elif self.type == self.TYPE_ARMOR:
 			self.health = 400
 
@@ -2749,8 +2749,8 @@ class Game():
 		self.timefreeze = False
 
 		# Generate a random number of type 1 tanks for the level
-		num_enemies = random.randint(6, 20)
-		self.level.enemies_left = [0] * num_enemies  # List with 'num_enemies' instances of type 1 tanks
+		#num_enemies = random.randint(6, 10)
+		self.level.enemies_left = [0] * 6  # List with 'num_enemies' instances of type 1 tanks
 
 		if play_sounds:
 			sounds["start"].play()
@@ -3023,16 +3023,17 @@ class Game():
 '''
 
 
-class TanksEnv(gym.Env):
+class TanksEnv(gymnasium.Env):
 	metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
 
 	def __init__(self, render_mode=None):
 		global gtimer, sprites, screen, screen_array, screen_array_grayscale, players, enemies, bullets, bonuses, labels, play_sounds, sounds, game, castle
-		global obs_flag_castle_danger, obs_flag_stupid, obs_flag_player_collision, obs_flag_hot
+		global obs_flag_castle_danger, obs_flag_stupid, obs_flag_player_collision, obs_flag_hot, obs_flag_bullet_fired
 		obs_flag_castle_danger = 0
 		obs_flag_stupid = 0
 		obs_flag_player_collision = 0
 		obs_flag_hot = 0
+		obs_flag_bullet_fired = 0
 		self.enemy_in_line = 4
 		self.width = 208   # screen width
 		self.height = 208  # screen height
@@ -3042,11 +3043,12 @@ class TanksEnv(gym.Env):
 		self.heat_map = np.zeros((13, 13))
 		self.grid_size = 32
 		self.grid_position = [0, 0, 0, 0, 0, 0, 0]
-		self.heat_decay_rate = 0.05  # Rate at which heat values decay each step
+		self.heat_decay_rate = 0.02  # Rate at which heat values decay each step
 		self.heat_base_penalty = 0.01 # Penalty rate for staying on hot spots
 
 		# Initialize enemy positions
 		self.enemy_positions = np.full((4,7), 0)
+		self.bullet_positions = np.full((6,7), 0)
 
 		self.frame_stack = deque(maxlen=4)
 		empty_frame = np.zeros((self.width, self.height), dtype=np.uint8)
@@ -3054,19 +3056,51 @@ class TanksEnv(gym.Env):
 			self.frame_stack.append(empty_frame)
 
 		self.bullet_avoidance_dir = 4
-		self.observation_space = spaces.Dict(
+
+		# Not normalized
+		# self.observation_space = spaces.Dict(
+		# 	{
+		# 		"obs_frames": spaces.Box(low=0, high=255, shape=(4, self.width, self.height), dtype=np.uint8),
+		# 		"player_position": spaces.MultiDiscrete([30, 30, 5, 5, 60, 60, 5]), #x, y, direction, lives, distance to castle, distance to closest enemy, bullet avoidance.
+		# 		"enemy1_position": spaces.MultiDiscrete([30, 30, 5, 2, 60, 60, 5]), #x, y, direction, lives, distance to castle, distance to player, in line status.
+		# 		"enemy2_position": spaces.MultiDiscrete([30, 30, 5, 2, 60, 60, 5]), #dead is [29, 29, 4, 0, 59, 59, 4]
+		# 		"enemy3_position": spaces.MultiDiscrete([30, 30, 5, 2, 60, 60, 5]),
+		# 		"enemy4_position": spaces.MultiDiscrete([30, 30, 5, 2, 60, 60, 5]),
+		# 		"prev_action": spaces.MultiDiscrete([2, 5]), # [no shoot, shoot], [move up, down, right , left, no move]     
+		# 		"ai_bot_actions": spaces.MultiDiscrete([2, 5]),
+		# 		"flags": spaces.MultiBinary(4),
+		# 		"enemies_left": spaces.Discrete(21),
+		# 		"heatmap": spaces.Box(low=0, high=26, shape=(13, 13), dtype=np.float64)
+				 
+
+		# 		#celdas alrededor que están libres?
+
+		# 	}
+		# )
+
+		self.observation_space = gymnasium.spaces.Dict(
 			{
-				"obs_frames": spaces.Box(low=0, high=255, shape=(4, self.width, self.height), dtype=np.uint8),
-				"player_position": spaces.MultiDiscrete([30, 30, 5, 5, 60, 60, 5]), #x, y, direction, lives, distance to castle, distance to closest enemy, bullet avoidance.
-				"enemy1_position": spaces.MultiDiscrete([30, 30, 5, 2, 60, 60, 5]), #x, y, direction, lives, distance to castle, distance to player, in line status.
-				"enemy2_position": spaces.MultiDiscrete([30, 30, 5, 2, 60, 60, 5]), #dead is [29, 29, 4, 0, 59, 59, 4]
-				"enemy3_position": spaces.MultiDiscrete([30, 30, 5, 2, 60, 60, 5]),
-				"enemy4_position": spaces.MultiDiscrete([30, 30, 5, 2, 60, 60, 5]),
-				"prev_action": spaces.MultiDiscrete([2, 5]), # [no shoot, shoot], [move up, down, right , left, no move]     
-				"ai_bot_actions": spaces.MultiDiscrete([2, 5]),
-				"flags": spaces.MultiBinary(4),
-				"enemies_left": spaces.Discrete(21),
-				"temperature": spaces.Discrete(27),
+				"obs_frames": gymnasium.spaces.Box(low=0.0, high=1.0, shape=(4, self.width, self.height), dtype=np.float64),
+
+				"player_position": gymnasium.spaces.Box(low=0.0, high=1.0, shape=(7,), dtype=np.float64),  # Normalized values
+				"enemy1_position": gymnasium.spaces.Box(low=0.0, high=1.0, shape=(7,), dtype=np.float64),
+				"enemy2_position": gymnasium.spaces.Box(low=0.0, high=1.0, shape=(7,), dtype=np.float64),
+				"enemy3_position": gymnasium.spaces.Box(low=0.0, high=1.0, shape=(7,), dtype=np.float64),
+				"enemy4_position": gymnasium.spaces.Box(low=0.0, high=1.0, shape=(7,), dtype=np.float64),
+
+				"bullet1_position": gymnasium.spaces.Box(low=0.0, high=1.0, shape=(7,), dtype=np.float64),
+				"bullet2_position": gymnasium.spaces.Box(low=0.0, high=1.0, shape=(7,), dtype=np.float64),
+				"bullet3_position": gymnasium.spaces.Box(low=0.0, high=1.0, shape=(7,), dtype=np.float64),
+				"bullet4_position": gymnasium.spaces.Box(low=0.0, high=1.0, shape=(7,), dtype=np.float64),
+				"bullet5_position": gymnasium.spaces.Box(low=0.0, high=1.0, shape=(7,), dtype=np.float64),
+				"bullet6_position": gymnasium.spaces.Box(low=0.0, high=1.0, shape=(7,), dtype=np.float64),
+
+				"prev_action": gymnasium.spaces.MultiDiscrete([2, 5]), # [no shoot, shoot], [move up, down, right , left, no move]     
+				"ai_bot_actions": gymnasium.spaces.MultiDiscrete([2, 5]),  # Normalized ai_bot_actions
+				"flags": gymnasium.spaces.MultiBinary(5),
+				"enemies_left": gymnasium.spaces.Box(low=0.0, high=1.0, shape=(1,), dtype=np.float64),
+				"heatmap": gymnasium.spaces.Box(low=0.0, high=1.0, shape=(13, 13), dtype=np.float64),
+				 
 
 				#celdas alrededor que están libres?
 
@@ -3074,7 +3108,7 @@ class TanksEnv(gym.Env):
 		)
 
 		# Define the action space: no move, shoot, move up, down, right and left           
-		self.action_space = spaces.MultiDiscrete([2, 5])
+		self.action_space = gymnasium.spaces.MultiDiscrete([2, 5])
 
 		# Initialize variables (this was in the main part of tanks.py)
 		gtimer = Timer()
@@ -3098,7 +3132,7 @@ class TanksEnv(gym.Env):
 	
 	def _get_obs(self):
 		global gtimer, sprites, screen, screen_array, screen_array_grayscale, players, enemies, bullets, bonuses, labels, play_sounds, sounds, game, castle
-		global obs_flag_castle_danger, obs_flag_stupid, obs_flag_player_collision, obs_flag_hot
+		global obs_flag_castle_danger, obs_flag_stupid, obs_flag_player_collision, obs_flag_hot, obs_flag_bullet_fired
 
 
 		
@@ -3111,7 +3145,7 @@ class TanksEnv(gym.Env):
 		# for i in range(2):
 		# 	for j in range(2):
 		# 		index = i * 2 + j
-		# 		axs[i, j].imshow(self.obs_frames[index], cmap='gray')
+		# 		axs[i, j].imshow(np.array(self.obs_frames)[index], cmap='gray')
 		# 		axs[i, j].set_title(f'Frame {index + 1}')
 		# 		axs[i, j].axis('off')
 
@@ -3121,34 +3155,55 @@ class TanksEnv(gym.Env):
 		################### OBSERVATION DEBUGGING #####################
 			
 		# print("step: ", self.paso, ". Reward: ", self.reward)
-		# print(np.array(self.grid_position))
-		# print(np.array(self.enemy_positions[0]))
-		# print(np.array(self.enemy_positions[1]))
-		# print(np.array(self.enemy_positions[2]))
-		# print(np.array(self.enemy_positions[3]))
+		# print("player: ")
+		# print(np.round(np.array(self.grid_position) / np.array([29*16, 29*16, 4, 4, 59*16, 59*16, 4]), 2))
+		# print("enemies: ")
+		# print(np.round(np.array(self.enemy_positions[0]) / np.array([29*16, 29*16, 4, 4, 59*16, 59*16, 4]), 2))
+		# print(np.round(np.array(self.enemy_positions[1]) / np.array([29*16, 29*16, 4, 4, 59*16, 59*16, 4]), 2))
+		# print(np.round(np.array(self.enemy_positions[2]) / np.array([29*16, 29*16, 4, 4, 59*16, 59*16, 4]), 2))
+		# print(np.round(np.array(self.enemy_positions[3]) / np.array([29*16, 29*16, 4, 4, 59*16, 59*16, 4]), 2))
+		# print("bullets: ")
+		# print(np.round(np.array(self.bullet_positions[0]) / np.array([29*16, 29*16, 4, 1, 59*16, 59*16, 4]), 2))
+		# print(np.round(np.array(self.bullet_positions[1]) / np.array([29*16, 29*16, 4, 1, 59*16, 59*16, 4]), 2))
+		# print(np.round(np.array(self.bullet_positions[2]) / np.array([29*16, 29*16, 4, 1, 59*16, 59*16, 4]), 2))
+		# print(np.round(np.array(self.bullet_positions[3]) / np.array([29*16, 29*16, 4, 1, 59*16, 59*16, 4]), 2))
+		# print(np.round(np.array(self.bullet_positions[4]) / np.array([29*16, 29*16, 4, 1, 59*16, 59*16, 4]), 2))
+		# print(np.round(np.array(self.bullet_positions[5]) / np.array([29*16, 29*16, 4, 1, 59*16, 59*16, 4]), 2))
+		# print("actions: ")
 		# print(np.array(game.ai_bot_actions))
-		# print(self.prev_action)
-		# print(np.array([obs_flag_castle_danger, obs_flag_stupid, obs_flag_player_collision, obs_flag_hot]))
-		# print(len(enemies))
-		# print(int(self.heat_map[self.grid_position[0], self.grid_position[1]]))
+		# print(np.array(self.prev_action))
+		# print("other: ")
+		# print(np.array([obs_flag_castle_danger, obs_flag_stupid, obs_flag_player_collision, obs_flag_hot, obs_flag_bullet_fired]))
+		# print(np.round(len(enemies) / 20, 2))
+		# print(np.round(np.array(self.heat_map) / 25, 2))
 
-		if obs_flag_castle_danger or self.grid_position[6] != 4 or self.enemy_positions[0][6] != 4 or self.enemy_positions[1][6] != 4:
-			dummy = 0
+		# if obs_flag_castle_danger or self.grid_position[6] != 4 or self.enemy_positions[0][6] != 4 or self.enemy_positions[1][6] != 4:
+		# 	dummy = 0
 
 		################### OBSERVATION DEBUGGING #####################
 
 		return {
-			"obs_frames": self.obs_frames,
-			"player_position": np.array(self.grid_position),
-			"enemy1_position": np.array(self.enemy_positions[0]),
-			"enemy2_position": np.array(self.enemy_positions[1]),
-			"enemy3_position": np.array(self.enemy_positions[2]),
-			"enemy4_position": np.array(self.enemy_positions[3]),
+			"obs_frames": np.array(self.obs_frames) / 255.0,
+
+			"player_position": np.array(self.grid_position) / np.array([29*16, 29*16, 4, 4, 59*16, 59*16, 4]),
+			"enemy1_position": np.array(self.enemy_positions[0]) / np.array([29*16, 29*16, 4, 1, 59*16, 59*16, 4]),
+			"enemy2_position": np.array(self.enemy_positions[1]) / np.array([29*16, 29*16, 4, 1, 59*16, 59*16, 4]),
+			"enemy3_position": np.array(self.enemy_positions[2]) / np.array([29*16, 29*16, 4, 1, 59*16, 59*16, 4]),
+			"enemy4_position": np.array(self.enemy_positions[3]) / np.array([29*16, 29*16, 4, 1, 59*16, 59*16, 4]),
+
+			"bullet1_position": np.array(self.bullet_positions[0]) / np.array([29*16, 29*16, 4, 1, 59*16, 59*16, 4]),
+			"bullet2_position": np.array(self.bullet_positions[1]) / np.array([29*16, 29*16, 4, 1, 59*16, 59*16, 4]),
+			"bullet3_position": np.array(self.bullet_positions[2]) / np.array([29*16, 29*16, 4, 1, 59*16, 59*16, 4]),
+			"bullet4_position": np.array(self.bullet_positions[3]) / np.array([29*16, 29*16, 4, 1, 59*16, 59*16, 4]),
+			"bullet5_position": np.array(self.bullet_positions[4]) / np.array([29*16, 29*16, 4, 1, 59*16, 59*16, 4]),
+			"bullet6_position": np.array(self.bullet_positions[5]) / np.array([29*16, 29*16, 4, 1, 59*16, 59*16, 4]),
+
 			"ai_bot_actions": np.array(game.ai_bot_actions),
-			"prev_action": self.prev_action,
-			"flags": np.array([obs_flag_castle_danger, obs_flag_stupid, obs_flag_player_collision, obs_flag_hot]),
-			"enemies_left": len(enemies),
-			"temperature": int(self.heat_map[self.grid_position[0], self.grid_position[1]]),
+			"prev_action": np.array(self.prev_action),
+
+			"flags": np.array([obs_flag_castle_danger, obs_flag_stupid, obs_flag_player_collision, obs_flag_hot, obs_flag_bullet_fired]),
+			"enemies_left": np.array([len(enemies) / 20]),
+			"heatmap": np.array(self.heat_map) / 25,
 			
 		}
 		# return {"agent": self._agent_location, "target": self._target_location}
@@ -3175,14 +3230,14 @@ class TanksEnv(gym.Env):
 	
 	def reset(self, seed=None, options=None):
 		global gtimer, sprites, screen, screen_array, screen_array_grayscale, players, enemies, bullets, bonuses, labels, play_sounds, sounds, game, castle
-		global obs_flag_castle_danger, obs_flag_stupid, obs_flag_player_collision, obs_flag_hot
-		global obs_flag_top_occupied, obs_flag_bottom_occupied, obs_flag_left_occupied, obs_flag_right_occupied
+		global obs_flag_castle_danger, obs_flag_stupid, obs_flag_player_collision, obs_flag_hot, obs_flag_bullet_fired
+		#global obs_flag_top_occupied, obs_flag_bottom_occupied, obs_flag_left_occupied, obs_flag_right_occupied
 		# Reset the timer at the start of a level
 		#self.level_start_time = time.time()
 		self.reward = 0
 		self.paso = 0
 		players[0].lives = 3
-		self.prev_action = np.array([0, 4])
+		self.prev_action = np.array([0, 0])
 		#self.killed_enemies = 0
 
 		self.bullet_avoidance_dir = 4
@@ -3190,6 +3245,7 @@ class TanksEnv(gym.Env):
 		obs_flag_stupid = 0
 		obs_flag_player_collision = 0
 		obs_flag_hot = 0
+		obs_flag_bullet_fired = 0
 
 		
 		empty_frame = np.zeros((self.width, self.height), dtype=np.uint8)
@@ -3205,7 +3261,10 @@ class TanksEnv(gym.Env):
 
 
 		for i in range(4):
-			self.enemy_positions[i] = [29, 29, 4, 0, 59, 59, 4] # Dead
+			self.enemy_positions[i] = [29*16, 29*16, 4, 0, 59*16, 59*16, 4] # Dead
+
+		for i in range(6):
+			self.bullet_positions[i] = [29*16, 29*16, 4, 1, 59*16, 59*16, 4] # Dead
 
 		#game.gameOver()
 		game.nextLevel()
@@ -3239,43 +3298,63 @@ class TanksEnv(gym.Env):
 
 	def step(self, action):
 		global gtimer, sprites, screen, screen_array, screen_array_grayscale, players, enemies, bullets, bonuses, labels, play_sounds, sounds, game, castle
-		global obs_flag_stupid, obs_flag_player_collision, obs_flag_hot, obs_flag_castle_danger
+		global obs_flag_stupid, obs_flag_player_collision, obs_flag_hot, obs_flag_castle_danger, obs_flag_bullet_fired
 		self.reward = 0
 		#danger_flag = 0
 		obs_flag_stupid = 0
 		obs_flag_player_collision = 0
 		obs_flag_castle_danger = 0
+		obs_flag_bullet_fired = 0
 		self.bullet_avoidance_dir = 4
-
 		time_passed = 20
 		self.paso += 1
+		
 
 		# Assuming grid size is 26x26 and directions are 0 to 3 (up, right, down, left)
-		# Initialize arrays with default values (assuming -1 for invalid positions and directions)
+		# Initialize arrays with default values
 		#self.enemy_positions = np.full((4, 7), 0)  # 4 enemies, each with x, y, direction, status
 
 		for i, enemy in enumerate(enemies[:4]):
 			if enemy.state != enemy.STATE_DEAD:
 				# Convert pixel position to grid position
-				grid_x, grid_y = enemy.rect.centerx // 16, enemy.rect.centery // 16
+				grid_x, grid_y = enemy.rect.centerx, enemy.rect.centery
 				direction = enemy.direction
 				status = 1  # Alive
-				distance_to_castle = Vmanhattan_distance(enemy.rect.topleft, castle.rect.topleft) // 16
-				distance_to_player = Vmanhattan_distance(enemy.rect.topleft, players[0].rect.topleft) // 16
+				distance_to_castle = Vmanhattan_distance(enemy.rect.topleft, castle.rect.topleft)
+				distance_to_player = Vmanhattan_distance(enemy.rect.topleft, players[0].rect.topleft)
 				in_line_status = Vinline_with_enemy(players[0].rect, enemy.rect)
 			else:
-				grid_x, grid_y, direction, status, distance_to_castle, distance_to_player, in_line_status = 29, 29, 4, 0, 59, 59, 4  # Dead
+				grid_x, grid_y, direction, status, distance_to_castle, distance_to_player, in_line_status = 29*16, 29*16, 4, 0, 59*16, 59*16, 4  # Dead
 
 			self.enemy_positions[i] = [grid_x, grid_y, direction, status, distance_to_castle, distance_to_player, in_line_status]
 
 		# If there are less than 4 enemies, mark the remaining positions as dead
 		if len(enemies) < 4:
 			for i in range(len(enemies), 4):
-				self.enemy_positions[i] = [29, 29, 4, 0, 59, 59, 4]  # Dead status for non-existent enemies
+				self.enemy_positions[i] = [29*16, 29*16, 4, 0, 59*16, 59*16, 4]  # Dead status for non-existent enemies
+
+		for i, bullet in enumerate(bullets[:6]):
+			if bullet.state != bullet.STATE_REMOVED:
+				# Convert pixel position to grid position (NO!)
+				grid_x, grid_y = bullet.rect.centerx, bullet.rect.centery
+				direction = bullet.direction
+				owner = bullet.owner
+				distance_to_castle = Vmanhattan_distance(bullet.rect.topleft, castle.rect.topleft)
+				distance_to_player = Vmanhattan_distance(bullet.rect.topleft, players[0].rect.topleft)
+				in_line_status = Vinline_with_enemy(players[0].rect, bullet.rect)
+			else:
+				grid_x, grid_y, direction, owner, distance_to_castle, distance_to_player, in_line_status = 29*16, 29*16, 4, 0, 59*16, 59*16, 4  # Dead
+
+			self.bullet_positions[i] = [grid_x, grid_y, direction, owner, distance_to_castle, distance_to_player, in_line_status]
+
+		# If there are less than 4 enemies, mark the remaining positions as dead
+		if len(bullets) < 6:
+			for i in range(len(bullets), 4):
+				self.bullet_positions[i] = [29*16, 29*16, 4, 0, 59*16, 59*16, 4]  # Dead status for non-existent enemies
 
 
 		# Initialize the smallest distance with a large value
-		smallest_distance = 59
+		smallest_distance = 59*16
 
 		for enemy in self.enemy_positions:
 			status = enemy[3]
@@ -3285,7 +3364,7 @@ class TanksEnv(gym.Env):
 			# Check if the enemy is alive and update the smallest distance if necessary
 			if status == 1 and distance_to_player < smallest_distance:
 				smallest_distance = distance_to_player
-			if status == 1 and distance_to_castle < 10:
+			if status == 1 and distance_to_castle < 10*16:
 				obs_flag_castle_danger = 1
 
 
@@ -3327,6 +3406,53 @@ class TanksEnv(gym.Env):
 		#print(self.prev_action, action)
 		#time.sleep(1/100)
 		pygame.event.pump()
+		game.ai_bot_actions = [0.0 if x is None else x for x in game.ai_bot_actions]
+
+		##### FOR CONTINUOUS ACTIONS #####
+		# ai_bot_mapped_action = game.ai_bot_actions / np.array([1, 4])
+
+		# for player in players:
+		# 	if player.state == player.STATE_ALIVE and not game.game_over and game.active:
+		# 		if action[0] > 0.5:
+		# 			player.fire()
+		# 			#self.reward += 0.0001
+				
+		# 		move_threshold = 0.2
+		# 		if action[1] < move_threshold:
+		# 			player.move(game.DIR_UP)
+		# 			if ai_bot_mapped_action[1] < move_threshold:
+		# 				self.reward += 0.1
+		# 			if self.prev_action[1] < move_threshold and obs_flag_player_collision == 0:
+		# 				self.reward += 0.05
+
+		# 		if move_threshold <= action[1] < 2 * move_threshold:
+		# 			player.move(game.DIR_RIGHT)
+		# 			if move_threshold <= ai_bot_mapped_action[1] < 2 * move_threshold:
+		# 				self.reward += 0.1
+		# 			if move_threshold <= self.prev_action[1] < 2 * move_threshold and obs_flag_player_collision == 0:
+		# 				self.reward += 0.05
+
+		# 		if 2 * move_threshold <= action[1] < 3 * move_threshold:
+		# 			player.move(game.DIR_DOWN)
+		# 			if 2 * move_threshold <= ai_bot_mapped_action[1] < 3 * move_threshold:
+		# 				self.reward += 0.1
+		# 			if 2 * move_threshold <= self.prev_action[1] < 3 * move_threshold and obs_flag_player_collision == 0:
+		# 				self.reward += 0.05
+
+		# 		if 3 * move_threshold <= action[1] < 4 * move_threshold:
+		# 			player.move(game.DIR_LEFT)
+		# 			if 3 * move_threshold <= ai_bot_mapped_action[1] < 4 * move_threshold:
+		# 				self.reward += 0.1
+		# 			if 3 * move_threshold <= self.prev_action[1] < 4 * move_threshold and obs_flag_player_collision == 0:
+		# 				self.reward += 0.05
+					
+		# 	self.prev_action = action
+
+		# 	if action[0] > 0.5 and ai_bot_mapped_action[0] > 0.5:
+		# 		self.reward += 0.2
+		##### FOR CONTINUOUS ACTIONS #####
+
+
 		for player in players:
 			if player.state == player.STATE_ALIVE and not game.game_over and game.active:
 				if action[0] == 1:
@@ -3355,22 +3481,22 @@ class TanksEnv(gym.Env):
 
 			if action[1] == game.ai_bot_actions[1] and action[1] != 4:
 				self.reward += 0.1
-			
+
 			# Get the player's current grid position
-			distance_to_castle = Vmanhattan_distance(player.rect.topleft, castle.rect.topleft) // 16
-			self.grid_position = (player.rect.centerx // self.grid_size, player.rect.centery // self.grid_size, player.direction, player.lives, distance_to_castle, smallest_distance, self.bullet_avoidance_dir)
+			distance_to_castle = Vmanhattan_distance(player.rect.topleft, castle.rect.topleft)
+			self.grid_position = (player.rect.centerx, player.rect.centery, player.direction, player.lives, distance_to_castle, smallest_distance, self.bullet_avoidance_dir)
 			
 			# Increase the heat value of the current position
-			if self.heat_map[self.grid_position[0], self.grid_position[1]] < 25:
-				self.heat_map[self.grid_position[0], self.grid_position[1]] += 1
+			if self.heat_map[round(self.grid_position[0]//self.grid_size), round(self.grid_position[1]//self.grid_size)] < 25:
+				self.heat_map[round(self.grid_position[0]//self.grid_size), round(self.grid_position[1]//self.grid_size)] += 0.5
 			
-			if self.heat_map[self.grid_position[0], self.grid_position[1]]	> 9:
+			if self.heat_map[round(self.grid_position[0]//self.grid_size), round(self.grid_position[1]//self.grid_size)]	> 9:
 				obs_flag_hot = 1
 			else:
 				obs_flag_hot = 0
 
 			# Apply a negative reward based on the heat value
-			self.reward -= self.heat_base_penalty * (1.22 ** self.heat_map[self.grid_position[0], self.grid_position[1]])
+			self.reward -= self.heat_base_penalty * (1.22 ** self.heat_map[round(self.grid_position[0]//self.grid_size), round(self.grid_position[1]//self.grid_size)])
 
 			# Decay the heat map
 			self.heat_map *= (1 - self.heat_decay_rate)
@@ -3381,14 +3507,14 @@ class TanksEnv(gym.Env):
 		for enemy in enemies:
 
 			if enemy.state == enemy.STATE_DEAD and not game.game_over and game.active:
-				self.reward += 2 # RW KILL
+				self.reward += 5 # RW KILL
 				#self.killed_enemies += 1
 				
 				enemies.remove(enemy)
 
 				if len(game.level.enemies_left) == 0 and len(enemies) == 0:
-					self.reward += 10 # RW WIN
-					print("You killed all enemy tanks! :). Reward: ", self.reward)
+					self.reward += 50 # RW WIN
+					print("You killed all enemy tanks! :)")
 					self.kill_ai_process(game.p)
 					self.clear_queue(game.p_mapinfo)
 					self.clear_queue(game.c_control)
@@ -3404,7 +3530,7 @@ class TanksEnv(gym.Env):
 						self.reward += 1 # RW BONUS
 						player.bonus = None
 				elif player.state == player.STATE_DEAD:
-					self.reward -= 4 # RW DEAD
+					self.reward -= 5 # RW DEAD
 					#print("-50 for dying! ", self.reward)
 					game.superpowers = 0
 					player.lives -= 1
@@ -3412,17 +3538,24 @@ class TanksEnv(gym.Env):
 						game.respawnPlayer(player)
 					else:
 						player.lives = 0
-						self.reward -= 6
-						print("You died! :(. Reward: ", self.reward)
+						self.reward -= 15
+						print("You died! :(")
 						self.kill_ai_process(game.p)
 						self.clear_queue(game.p_mapinfo)
 						self.clear_queue(game.c_control)
 						game.game_over = 1
 
 		for bullet in bullets:
+			if bullet.owner == 0 and bullet.state == bullet.STATE_ACTIVE:
+					obs_flag_bullet_fired = 1
+
 			if bullet.state == bullet.STATE_REMOVED:
 				bullets.remove(bullet)
 			else:
+				bullet.update()
+				bullet.update()
+				bullet.update()
+				bullet.update()
 				bullet.update()
 
 		# 	if bullet.owner == Bullet.OWNER_ENEMY:  # We consider enemy bullets as danger
@@ -3476,8 +3609,8 @@ class TanksEnv(gym.Env):
 
 		if not game.game_over:
 			if not castle.active:
-				self.reward -= 10 # RW LOST
-				#print("Castle not active! Reward: ", self.reward)
+				self.reward -= 50 # RW LOST
+				print("Castle not active!")
 				self.kill_ai_process(game.p)
 				self.clear_queue(game.p_mapinfo)
 				self.clear_queue(game.c_control)
@@ -3507,11 +3640,11 @@ class TanksEnv(gym.Env):
 		# print("test : ", action)
 		
 		self.obs_frames = np.stack([screen_array_grayscale, self.frame_stack[-2], self.frame_stack[-3], self.frame_stack[-4]], axis=0)
-		game.ai_bot_actions = [0 if x is None else x for x in game.ai_bot_actions]
+		
 		observation = self._get_obs()
 
 		#self.reward += self.killed_enemies*0.001
-		reward = self.reward
+		reward = self.reward / 10
 		terminated = game.game_over
 		truncated = False
 		# if self.paso == 2999 and terminated != 1:
