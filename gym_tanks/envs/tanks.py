@@ -1504,10 +1504,10 @@ class Tank():
 		if self.side == self.SIDE_ENEMY:
 			return False
 		elif self.side == self.SIDE_PLAYER:
-			if not self.paralised:
-				self.setParalised(True)
-				self.timer_uuid_paralise = gtimer.add(10000, lambda :self.setParalised(False), 1)
-			return True
+			# if not self.paralised:
+			# 	self.setParalised(True)
+			# 	self.timer_uuid_paralise = gtimer.add(10000, lambda :self.setParalised(False), 1)
+			return False
 
 	def setParalised(self, paralised = True):
 		""" set tank paralise state
@@ -3154,7 +3154,7 @@ class TanksEnv(gymnasium.Env):
 		
 		################### OBSERVATION DEBUGGING #####################
 			
-		# print("step: ", self.paso, ". Reward: ", self.reward)
+		print("step: ", self.paso, ". Reward: ", self.reward)
 		# print("player: ")
 		# print(np.round(np.array(self.grid_position) / np.array([29*16, 29*16, 4, 4, 59*16, 59*16, 4]), 2))
 		# print("enemies: ")
@@ -3171,7 +3171,7 @@ class TanksEnv(gymnasium.Env):
 		# print(np.round(np.array(self.bullet_positions[5]) / np.array([29*16, 29*16, 4, 1, 59*16, 59*16, 4]), 2))
 		# print("actions: ")
 		# print(np.array(game.ai_bot_actions))
-		# print(np.array(self.prev_action))
+		print(np.array(self.prev_action))
 		# print("other: ")
 		# print(np.array([obs_flag_castle_danger, obs_flag_stupid, obs_flag_player_collision, obs_flag_hot, obs_flag_bullet_fired]))
 		# print(np.round(len(enemies) / 20, 2))
