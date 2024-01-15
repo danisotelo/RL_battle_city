@@ -5,6 +5,9 @@ import os
 from stable_baselines3 import PPO
 from multiprocessing import freeze_support
 
+import os
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
+
 if __name__ == "__main__":
     # Avoid multiprocessing issues
     freeze_support()
@@ -19,7 +22,7 @@ if __name__ == "__main__":
     TIMESTEPS = 2048 # Steps used by default by PPO
 
     # Path to the .zip file with pre-trained weights
-    start_steps = 161792
+    start_steps = 0
     if start_steps > 0 and start_steps % TIMESTEPS == 0:
         weights_path = f"models/PPO/{test_name}/model_{start_steps}_steps.zip"
     else:
