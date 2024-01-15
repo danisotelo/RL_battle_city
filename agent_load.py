@@ -4,6 +4,9 @@ import gymnasium as gym
 from stable_baselines3 import PPO
 from multiprocessing import freeze_support
 
+import os
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
+
 if __name__ == "__main__":
     # Avoid multiprocessing issues
     freeze_support()
@@ -16,7 +19,7 @@ if __name__ == "__main__":
 
     # Set the models folder and path
     models_dir = "models/PPO/Test_Bot"
-    model_path = f"{models_dir}/model_161792_steps.zip" # Put here the weights file you want to read
+    model_path = f"{models_dir}/model_2064384_steps.zip" # Put here the weights file you want to read
 
     # Load the model
     model = PPO.load(model_path, env = env, n_steps = TIMESTEPS)
