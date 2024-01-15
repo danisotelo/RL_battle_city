@@ -67,7 +67,7 @@ In order to visualize the training results open a new terminal and run:
 ```
 tensorboard --logdir=logs
 ```
-In case you don't want to train the agent but just to load a model and see its performance, go to `agent_load.py` file and select the model you want to load in `models_dir`. If you want to use the best solution that was reached by us, you can download the weights file from https://drive.google.com/drive/folders/1DgOlP0Pr-otEAJC12qajCUuHw3icMhHb (remember to locate it in `models_dir`). Then, run:
+In case you don't want to train the agent but just to load a model and see its performance, go to `agent_load.py` file and select the model you want to load in `models_dir`. If you want to use the best solution that was reached by us, you can download the weights file from https://drive.google.com/drive/folders/1DgOlP0Pr-otEAJC12qajCUuHw3icMhHb (remember to locate it in `models/PPO/Test_Bot` folder). Then, run:
 ```
 python agent_load.py
 ```
