@@ -11,7 +11,7 @@ The following is a Python code that consists of a RL tank agent capable of playi
 To clone the repository and start using the **RL Battle City**, follow these steps:
 1. Open a terminal or command prompt
 2. Navigate to the directory where you want to clone the repository.
-3. Run the followin command:
+3. Run the following command:
 ```
 git clone https://github.com/danisotelo/RL_battle_city.git
 ```
